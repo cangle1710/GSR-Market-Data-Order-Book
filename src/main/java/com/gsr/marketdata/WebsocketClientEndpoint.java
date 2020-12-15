@@ -1,6 +1,7 @@
 package com.gsr.marketdata;
 
 import java.net.URI;
+import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
 import javax.websocket.ClientEndpoint;
 import javax.websocket.CloseReason;
@@ -21,7 +22,6 @@ public class WebsocketClientEndpoint {
     private Logger logger = Logger.getLogger(this.getClass().getName());
     Session userSession = null;
     private MessageHandler messageHandler;
-
     public WebsocketClientEndpoint(URI endpointURI) {
         try {
             WebSocketContainer container = ContainerProvider.getWebSocketContainer();

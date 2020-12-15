@@ -4,14 +4,23 @@ import com.gsr.utils.OrderBookUtils;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
 
 public class OrderBookService {
     private final Logger logger = Logger.getLogger(MainRunner.class.getName());
     private WebsocketClientEndpoint clientEndPoint;
-    public OrderBookService(){ }
+    private CountDownLatch latch;
+    public OrderBookService(){
+        latch = new CountDownLatch(1);
+    }
 
-    public void connect(){
+    public void doEnable(){
+        connect();
+        subscribe();
+    }
+
+    private void connect(){
         try {
             // open websocket
             URI coin_base_connection = new URI(OrderBookUtils.COIN_BASE_WEBSOCKET);
@@ -21,9 +30,17 @@ public class OrderBookService {
             clientEndPoint.addMessageHandler(new WebsocketClientEndpoint.MessageHandler() {
                 public void handleMessage(String message) {
                     System.out.println("Received message" + message);
+                    processMessage(message);
                 }
             });
+        } catch (final URISyntaxException ex) {
+            String exceptionStr = "Could not connect to Coinbase websocket: " + (ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage());
+            logger.warning(exceptionStr);
+        }
+    }
 
+    private void subscribe() {
+        try {
             // send message to websocket
             clientEndPoint.sendMessage("{\n" +
                     "    \"type\": \"subscribe\",\n" +
@@ -31,14 +48,27 @@ public class OrderBookService {
                     "        \"BTC-USD\"\n" +
                     "    ],\n" +
                     "    \"channels\": [\n" +
-                    "        \"level2\"\n" +
+                    "        \"ticker\"\n" +
                     "    ]\n" +
                     "}");
             Thread.currentThread().join();
-        } catch (InterruptedException ex) {
+        } catch (final InterruptedException ex) {
             logger.warning("InterruptedException exception: " + ex.getMessage());
-        } catch (URISyntaxException ex) {
-            logger.warning("URISyntaxException exception: " + ex.getMessage());
         }
+    }
+
+    public void doDisable(){
+        clientEndPoint.sendMessage("{\n" +
+                "    \"type\": \"unsubscribe\",\n" +
+                "    \"product_ids\": [\n" +
+                "        \"BTC-USD\"\n" +
+                "    ],\n" +
+                "    \"channels\": [\n" +
+                "        \"level2\"\n" +
+                "    ]\n" +
+                "}");
+    }
+    private void processMessage(String message){
+        // TODO: add logic to process each Json formatted message string
     }
 }
