@@ -1,3 +1,5 @@
+package com.gsr.marketdata;
+
 import java.net.URI;
 import java.util.logging.Logger;
 import javax.websocket.ClientEndpoint;
@@ -36,7 +38,7 @@ public class WebsocketClientEndpoint {
      */
     @OnOpen
     public void onOpen(Session userSession) {
-        logger.info("opening websocket");
+        logger.info("Connected");
         this.userSession = userSession;
     }
 

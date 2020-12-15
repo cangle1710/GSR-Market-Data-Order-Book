@@ -1,17 +1,21 @@
+package com.gsr.marketdata;
 
+import com.gsr.utils.OrderBookUtils;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Logger;
 
-public class OrderBookMain {
+public class OrderBookService {
+    private final Logger logger = Logger.getLogger(MainRunner.class.getName());
+    private WebsocketClientEndpoint clientEndPoint;
+    public OrderBookService(){ }
 
-    private static final Logger logger = Logger.getLogger(OrderBookMain.class.getName());
-
-    public static void main(String[] args){
+    public void connect(){
         try {
             // open websocket
-            final WebsocketClientEndpoint clientEndPoint = new WebsocketClientEndpoint(new URI(OrderBookUtils.COIN_BASE_WEBSOCKET));
+            URI coin_base_connection = new URI(OrderBookUtils.COIN_BASE_WEBSOCKET);
+            clientEndPoint = new WebsocketClientEndpoint(coin_base_connection);
 
             // add listener
             clientEndPoint.addMessageHandler(new WebsocketClientEndpoint.MessageHandler() {
