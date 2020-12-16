@@ -24,6 +24,7 @@ public class OrderBookUtils {
     }
 
     public enum Channel{
+        Ticker("ticker"),
         L2("level2");
 
         private String channel;
@@ -35,6 +36,21 @@ public class OrderBookUtils {
             return channel;
         }
     }
+
+    public enum Side{
+        Buy("buy"),
+        Sell("sell");
+
+        private String side;
+        Side(String side){
+            this.side = side;
+        }
+
+        public String getSide(){
+            return side;
+        }
+    }
+
     /**
      * Example subscribe message
      * {
