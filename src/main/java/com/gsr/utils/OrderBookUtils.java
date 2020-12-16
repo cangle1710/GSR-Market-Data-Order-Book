@@ -49,7 +49,7 @@ public class OrderBookUtils {
      *
      * @return
      */
-    public static String constructLevel2JsonMessageWithType( Type type, String productId, Channel channel){
+    public static String constructJsonMessage(Type type, String productId, Channel channel){
         JSONObject jsonObject = new JSONObject();
         jsonObject.put(TYPE, type.getType());
 

@@ -1,5 +1,6 @@
 package com.gsr.marketdata;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
@@ -13,16 +14,17 @@ import javax.websocket.Session;
 import javax.websocket.WebSocketContainer;
 
 /**
- * ChatServer Client
+ * WebSocket Client
  *
- * @author Jiji_Sasidharan
+ * @author Cang Le
  */
 @ClientEndpoint
-public class WebsocketClientEndpoint {
+public class WebSocketClientEndpoint {
     private Logger logger = Logger.getLogger(this.getClass().getName());
     Session userSession = null;
     private MessageHandler messageHandler;
-    public WebsocketClientEndpoint(URI endpointURI) {
+
+    public WebSocketClientEndpoint(URI endpointURI) {
         try {
             WebSocketContainer container = ContainerProvider.getWebSocketContainer();
             container.connectToServer(this, endpointURI);
@@ -90,7 +92,10 @@ public class WebsocketClientEndpoint {
      * @author Jiji_Sasidharan
      */
     public static interface MessageHandler {
-
         public void handleMessage(String message);
+    }
+
+    public void disconnect() throws IOException {
+        this.userSession.close();
     }
 }
