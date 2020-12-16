@@ -9,7 +9,7 @@ public class MainRunner {
         OrderBookService orderBookService = new OrderBookService();
         orderBookService.doEnable();
 
-        Thread.sleep(2000);
+//        Thread.sleep(2000);
         orderBookService.doDisable();
     }
 }

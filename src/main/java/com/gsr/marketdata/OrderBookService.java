@@ -8,11 +8,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
 
 public class OrderBookService {
-    private final Logger logger = Logger.getLogger(MainRunner.class.getName());
+    private final Logger logger = Logger.getLogger(this.getClass().getName());
     private WebsocketClientEndpoint clientEndPoint;
-    private CountDownLatch latch;
     public OrderBookService(){
-        latch = new CountDownLatch(1);
     }
 
     public void doEnable(){
