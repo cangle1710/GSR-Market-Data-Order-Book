@@ -3,10 +3,10 @@ package com.gsr.marketdata;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.gsr.common.L2Changes;
-import com.gsr.common.OrderOffer;
-import com.gsr.common.Wrapper;
-import org.json.simple.JSONArray;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.gsr.common.L2OrderResponse;
+import com.gsr.common.SnapShotOrderResponse;
+import org.javatuples.Pair;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -17,6 +17,7 @@ import java.net.URISyntaxException;
 import java.util.*;
 import java.util.logging.Logger;
 
+import static com.gsr.common.Constants.*;
 import static com.gsr.utils.OrderBookUtils.*;
 
 public class OrderBookService {
@@ -89,46 +90,33 @@ public class OrderBookService {
     }
 
     private void processMessage(String message){
-        ObjectMapper mapper = new ObjectMapper();
-        System.out.println(message);
+        final ObjectMapper mapper = new ObjectMapper();
+
+        final SimpleModule module = new SimpleModule();
+        module.addSerializer(Pair.class, new ResponseSerializer());
+        module.addDeserializer(Pair.class, new ResponseDeserializer());
+        mapper.registerModule(module);
+
         try{
             JSONParser parser = new JSONParser();
             JSONObject json = (JSONObject) parser.parse(message);
-            String type = (String) json.get("type");
-            if(type.equals("snapshot")){
-                JSONArray asksJsonArray = (JSONArray) json.get("asks");
-                List<OrderOffer> asksList;
-                if(asksJsonArray != null){
-                    Wrapper wrapper = mapper.readValue(asksJsonArray.toString(), Wrapper.class);
-//                    OrderOffer[] oo1 = mapper.readValue(asksJsonArray.toString(), OrderOffer[].class);
-//                    asksList = Arrays.asList(mapper.readValue(asksJsonArray.toString(),  OrderOffer[].class));
-                    System.out.print(asksJsonArray.toJSONString());
-                }
-
-                JSONArray bidsJsonArray = (JSONArray) json.get("bids");
-                List<Object> bidsList = new ArrayList<>();
-                if(bidsJsonArray != null){
-                    for(int i = 0; i < bidsJsonArray.size(); i++){
-                        bidsList.add(bidsJsonArray.get(i));
-                    }
-                }
-
+            String type = (String) json.get(TYPE);
+            if(type.equals(SNAPSHOT)){
+                SnapShotOrderResponse snapShotResponse = mapper.readValue(json.toString(), SnapShotOrderResponse.class);
             }
-            else if(type.equals("l2update")){
-                Object changes = json.get("changes");
-
+            else if(type.equals(L2_UPDATE)){
+                L2OrderResponse l2Response = mapper.readValue(json.toString(), L2OrderResponse.class);
             }
-
+            System.out.println(message);
         }
         catch(ParseException ex){
             ex.printStackTrace();
-        } catch (JsonParseException e) {
+         }  catch (JsonParseException e) {
             e.printStackTrace();
         } catch (JsonMappingException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        // TODO: add logic to process each Json formatted message string
     }
 }
