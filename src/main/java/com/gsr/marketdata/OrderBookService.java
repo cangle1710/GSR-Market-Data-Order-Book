@@ -108,14 +108,17 @@ public class OrderBookService {
         module.addDeserializer(Pair.class, new ResponseDeserializer());
         mapper.registerModule(module);
 
+        // parse Json response message and map to corresponding object
         try{
             JSONParser parser = new JSONParser();
             JSONObject json = (JSONObject) parser.parse(message);
             String type = (String) json.get(TYPE);
+            // build an order book from 'snapshot' type response
             if(type.equals(SNAPSHOT)){
                 SnapShotOrderResponse snapShotResponse = mapper.readValue(json.toString(), SnapShotOrderResponse.class);
                 buildOrderBook(snapShotResponse);
             }
+            // update order book from 'l2update' type response
             else if(type.equals(L2_UPDATE)){
                 L2OrderResponse l2Response = mapper.readValue(json.toString(), L2OrderResponse.class);
                 updateOrderBook(l2Response);
@@ -134,19 +137,20 @@ public class OrderBookService {
         sb.append("\n[\t\tAsks\t\t\t]");
         sb.append("\n[ Price\t\t| Size\t\t\t]");
 
-        while(!copyTopOfAsksBook.isEmpty() && level < 20){
+        while(!copyTopOfAsksBook.isEmpty() && level < 10){
             Double price = copyTopOfAsksBook.poll();
             Double size = asks.get(price);
             sb.append("\n[" + price + "\t|");
             sb.append(String.format("%.8f", size) + "\t\t]");
             level++;
         }
+
         sb.append("\n\n");
         PriorityQueue<Double> copyTopOfBidsBook = new PriorityQueue<>(topOfBidsBook);
         sb.append("\n[\t\tBids\t\t\t]");
         sb.append("\n[ Price\t\t| Size\t\t\t]");
         level = 0;
-        while(!copyTopOfBidsBook.isEmpty() && level < 20){
+        while(!copyTopOfBidsBook.isEmpty() && level < 10){
             Double price = copyTopOfBidsBook.poll();
             Double size = bids.get(price);
             sb.append("\n[" + price + "\t|");
