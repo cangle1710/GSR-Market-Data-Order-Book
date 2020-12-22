@@ -132,30 +132,28 @@ public class OrderBookService {
 
     private void displayOrderBook(){
         StringBuilder sb = new StringBuilder();
-        int level = 0;
-        PriorityQueue<Double> copyTopOfAsksBook = new PriorityQueue<>(topOfAsksBook);
+
+        Object[] asksArray = topOfAsksBook.toArray();
+        Arrays.sort(asksArray, (a,b) -> Double.compare((Double)b, (Double)a));
         sb.append("\n[\t\tAsks\t\t\t]");
         sb.append("\n[ Price\t\t| Size\t\t\t]");
-
-        while(!copyTopOfAsksBook.isEmpty() && level < 10){
-            Double price = copyTopOfAsksBook.poll();
+        for(int i = asksArray.length - 10; i < asksArray.length; i++){
+            Double price = (Double) asksArray[i];
             Double size = asks.get(price);
             sb.append("\n[" + price + "\t|");
             sb.append(String.format("%.8f", size) + "\t\t]");
-            level++;
         }
 
         sb.append("\n\n");
-        PriorityQueue<Double> copyTopOfBidsBook = new PriorityQueue<>(topOfBidsBook);
         sb.append("\n[\t\tBids\t\t\t]");
         sb.append("\n[ Price\t\t| Size\t\t\t]");
-        level = 0;
-        while(!copyTopOfBidsBook.isEmpty() && level < 10){
-            Double price = copyTopOfBidsBook.poll();
+        Object[] bidsArray = topOfBidsBook.toArray();
+        Arrays.sort(bidsArray, Comparator.comparingDouble(a -> (Double) a));
+        for(int i = bidsArray.length - 1; i >= bidsArray.length - 10; i--){
+            Double price = (Double) bidsArray[i];
             Double size = bids.get(price);
             sb.append("\n[" + price + "\t|");
             sb.append(String.format("%.8f", size) + "\t\t]");
-            level++;
         }
 
         System.out.print("\r" + sb.toString());
