@@ -7,7 +7,7 @@ public class Constants {
     public static final String CHANNELS = "channels";
     public static final String SNAPSHOT = "snapshot";
     public static final String L2_UPDATE = "l2update";
-
+    public static final String BUY = "buy";
     public enum Type{
         SUBSCRIBE("subscribe"),
         UNSUBSCRIBE("unsubscribe");

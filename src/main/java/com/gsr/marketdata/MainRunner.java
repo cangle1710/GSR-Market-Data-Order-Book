@@ -17,7 +17,7 @@ public class MainRunner {
         OrderBookService orderBookService = new OrderBookService(instrument);
         // adding shut down hook to catch "Ctrl + C" shutdown command
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("Shutting down ...");
+            logger.info("Shutting down ...");
             orderBookService.doDisable();
         }));
 

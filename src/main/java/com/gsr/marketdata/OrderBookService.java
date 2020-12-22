@@ -16,11 +16,12 @@ import java.util.*;
 import java.util.logging.Logger;
 
 import static com.gsr.common.Constants.*;
+import static com.gsr.common.Constants.Side.Buy;
 import static com.gsr.utils.OrderBookUtils.*;
 
 public class OrderBookService {
     private final Logger logger = Logger.getLogger(this.getClass().getName());
-    private final int orderBookSize = 10;
+    private final int orderBookSize = 100;
 
     private WebSocketClientEndpoint clientEndPoint;
     private String instrument;
@@ -118,12 +119,42 @@ public class OrderBookService {
             else if(type.equals(L2_UPDATE)){
                 L2OrderResponse l2Response = mapper.readValue(json.toString(), L2OrderResponse.class);
                 updateOrderBook(l2Response);
+                displayOrderBook();
             }
-            System.out.println(message);
         } catch(final ParseException | IOException ex){
             String exceptionStr = "Could not process web socket response : " + (ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage());
             logger.warning(exceptionStr);
          }
+    }
+
+    private void displayOrderBook(){
+        StringBuilder sb = new StringBuilder();
+        int level = 0;
+        PriorityQueue<Double> copyTopOfAsksBook = new PriorityQueue<>(topOfAsksBook);
+        sb.append("\n[\t\tAsks\t\t\t]");
+        sb.append("\n[ Price\t\t| Size\t\t\t]");
+
+        while(!copyTopOfAsksBook.isEmpty() && level < 20){
+            Double price = copyTopOfAsksBook.poll();
+            Double size = asks.get(price);
+            sb.append("\n[" + price + "\t|");
+            sb.append(String.format("%.8f", size) + "\t\t]");
+            level++;
+        }
+        sb.append("\n\n");
+        PriorityQueue<Double> copyTopOfBidsBook = new PriorityQueue<>(topOfBidsBook);
+        sb.append("\n[\t\tBids\t\t\t]");
+        sb.append("\n[ Price\t\t| Size\t\t\t]");
+        level = 0;
+        while(!copyTopOfBidsBook.isEmpty() && level < 20){
+            Double price = copyTopOfBidsBook.poll();
+            Double size = bids.get(price);
+            sb.append("\n[" + price + "\t|");
+            sb.append(String.format("%.8f", size) + "\t\t]");
+            level++;
+        }
+
+        System.out.print("\r" + sb.toString());
     }
 
     private void buildOrderBook(SnapShotOrderResponse snapShotOrderResponse){
@@ -133,10 +164,7 @@ public class OrderBookService {
             double size = Double.parseDouble(pair.getValue1());
 
             asks.put(price, size);
-            topOfAsksBook.offer(price);
-            if(topOfAsksBook.size() > orderBookSize){
-                topOfAsksBook.poll();
-            }
+            addToOrderBook(topOfAsksBook, price);
         }
 
         List<Pair<String, String>> bidsList = snapShotOrderResponse.getBids();
@@ -145,14 +173,9 @@ public class OrderBookService {
             double size = Double.parseDouble(pair.getValue1());
 
             bids.put(price, size);
-            topOfBidsBook.offer(price);
-            if(topOfBidsBook.size() > orderBookSize){
-                topOfBidsBook.poll();
-            }
+            addToOrderBook(topOfBidsBook, price);
         }
     }
-
-    // {"type":"l2update","product_id":"BTC-USD","changes":[["sell","22949.81","0.10000000"]],"time":"2020-12-21T21:34:32.969574Z"}
 
     private void updateOrderBook(L2OrderResponse l2Response){
         List<Pair<String, Pair<String, String>>> l2List = l2Response.getChanges();
@@ -162,16 +185,33 @@ public class OrderBookService {
             double price = Double.parseDouble(tuple.getValue0());
             double size = Double.parseDouble(tuple.getValue1());
 
+            Map<Double, Double> orderBookToModify = (side.equals(BUY)) ? bids : asks;
+            PriorityQueue<Double> topOfBookToModify = (side.equals(BUY)) ? topOfBidsBook : topOfAsksBook;
+
             // delete operation - price is 0.00
-            // remove element from map
-            if(size == 0.0){
-
+            // remove element from map and update top of asks/bids books
+            if(size == 0){
+                orderBookToModify.remove(price);
+                if(topOfBookToModify.contains(price)){
+                    topOfBookToModify.remove(price);
+                }
             }
-
+            // look up price in map, modify size. Then update top of asks/bids books
+            else{
+                // insertion operation.
+                if(!orderBookToModify.containsKey(price)){
+                    addToOrderBook(topOfBookToModify, price);
+                }
+                // both modification and insertion operation need to update bids and asks map
+                orderBookToModify.put(price, size);
+            }
         }
     }
 
-    private void updateBook(Map<Double, Double> bookMap, PriorityQueue<Double> bookQueue, double price, double size){
-
+    private void addToOrderBook(PriorityQueue<Double> topOfBook, double price){
+        topOfBook.offer(price);
+        if(topOfBook.size() > orderBookSize){
+            topOfBook.poll();
+        }
     }
 }
