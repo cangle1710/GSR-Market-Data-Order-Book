@@ -13,10 +13,15 @@ public class MainRunner {
         else{
             instrument = args[0];
         }
-        OrderBookService orderBookService = new OrderBookService(instrument);
-        orderBookService.doEnable();
 
-//        Thread.sleep(2000);
-        orderBookService.doDisable();
+        OrderBookService orderBookService = new OrderBookService(instrument);
+        // adding shut down hook to catch "Ctrl + C" shutdown command
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            logger.info("Shutting down ...");
+            orderBookService.doDisable();
+        }));
+
+        // starting order book service
+        orderBookService.doEnable();
     }
 }

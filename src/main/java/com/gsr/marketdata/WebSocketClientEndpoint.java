@@ -52,7 +52,7 @@ public class WebSocketClientEndpoint {
      */
     @OnClose
     public void onClose(Session userSession, CloseReason reason) {
-        logger.info("closing websocket");
+        logger.info("Disconnected");
         this.userSession = null;
     }
 
